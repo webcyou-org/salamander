@@ -1,47 +1,42 @@
-using System;
-using System.ComponentModel;
-
-public interface IPerson : INotifyPropertyChanged
+public class Person : ReactiveObject
 {
-    string Name { get; set; }
-    int Age { get; set; }
-}
-
-public class Person : IPerson
-{
-    private string name;
-    private int age;
-
-    public event PropertyChangedEventHandler PropertyChanged;
+    private string _name;
+    private int _age;
+    private Address _address;
 
     public string Name
     {
-        get => name;
-        set
-        {
-            if (name != value)
-            {
-                name = value;
-                OnPropertyChanged(nameof(Name));
-            }
-        }
+        get => _name;
+        set => SetProperty(ref _name, value, nameof(Name));
     }
 
     public int Age
     {
-        get => age;
-        set
-        {
-            if (age != value)
-            {
-                age = value;
-                OnPropertyChanged(nameof(Age));
-            }
-        }
+        get => _age;
+        set => SetProperty(ref _age, value, nameof(Age));
     }
 
-    protected void OnPropertyChanged(string propertyName)
+    public Address Address
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        get => _address;
+        set => SetProperty(ref _address, value, nameof(Address));
+    }
+}
+
+public class Address : ReactiveObject
+{
+    private string _street;
+    private string _city;
+
+    public string Street
+    {
+        get => _street;
+        set => SetProperty(ref _street, value, nameof(Street));
+    }
+
+    public string City
+    {
+        get => _city;
+        set => SetProperty(ref _city, value, nameof(City));
     }
 }

@@ -27,21 +27,29 @@ public class Program
     
     public static void Main()
     {
-        IPerson person = new Person
+        var address = new Address
         {
-            Name = "John Doe",
-            Age = 30
+            Street = "123 Main St",
+            City = "Anytown"
         };
 
-        var reactivePerson = DeepReactive<IPerson>.Create(person);
-        ((DeepReactive<IPerson>)(object)reactivePerson).AddPropertyChangedHandler((sender, args) =>
+        var person = new Person
+        {
+            Name = "John Doe",
+            Age = 30,
+            // Address = address
+        };
+
+        var reactivePerson = DeepReactive.Create(person);
+        reactivePerson.PropertyChanged += (sender, args) =>
         {
             Console.WriteLine($"{args.PropertyName} has changed.");
-        });
+        };
 
         reactivePerson.Name = "Jane Doe";
         reactivePerson.Age = 35;
+        reactivePerson.Address.Street = "456 Elm St";
 
-        Console.WriteLine($"Name: {person.Name}, Age: {person.Age}");
+        Console.WriteLine($"Name: {person.Name}, Age: {person.Age}, Street: {person.Address.Street}"); // Name: Jane Doe, Age: 35, Street: 456 Elm St
     }
 }

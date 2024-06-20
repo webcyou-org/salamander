@@ -45,6 +45,86 @@ public class ReactiveObject : INotifyPropertyChanged
     }
 }
 
+public class DeepReactive : ReactiveObject
+{
+    private readonly object _target;
+    private readonly Dictionary<string, PropertyInfo> _properties = new Dictionary<string, PropertyInfo>();
+
+    protected DeepReactive(object target)
+    {
+        _target = target;
+        var type = target.GetType();
+        foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (prop.CanRead && prop.CanWrite)
+            {
+                _properties[prop.Name] = prop;
+                var value = prop.GetValue(target);
+                if (value != null && IsComplexType(prop.PropertyType))
+                {
+                    var reactiveValue = Create(prop.PropertyType, value);
+                    prop.SetValue(target, reactiveValue);
+                }
+            }
+        }
+    }
+
+    public static object Create(Type type, object target)
+    {
+        var reactiveType = typeof(DeepReactive<>).MakeGenericType(type);
+        return Activator.CreateInstance(reactiveType, target);
+    }
+
+    public static T Create<T>(T target) where T : class
+    {
+        return (T)Create(typeof(T), target);
+    }
+
+    private bool IsComplexType(Type type)
+    {
+        return type.IsClass && type != typeof(string);
+    }
+
+    public T GetProperty<T>(string propertyName)
+    {
+        if (_properties.ContainsKey(propertyName))
+        {
+            return (T)_properties[propertyName].GetValue(_target);
+        }
+        throw new ArgumentException($"Property {propertyName} not found on {_target.GetType().Name}");
+    }
+
+    public void SetProperty<T>(string propertyName, T value)
+    {
+        if (_properties.ContainsKey(propertyName))
+        {
+            var oldValue = _properties[propertyName].GetValue(_target);
+            if (!Equals(oldValue, value))
+            {
+                if (value != null && IsComplexType(value.GetType()))
+                {
+                    var reactiveValue = Create(value.GetType(), value);
+                    _properties[propertyName].SetValue(_target, reactiveValue);
+                }
+                else
+                {
+                    _properties[propertyName].SetValue(_target, value);
+                }
+                OnPropertyChanged(propertyName);
+            }
+        }
+        else
+        {
+            throw new ArgumentException($"Property {propertyName} not found on {_target.GetType().Name}");
+        }
+    }
+}
+
+public class DeepReactive<T> : DeepReactive where T : class
+{
+    public DeepReactive(T target) : base(target) { }
+}
+
 public static class ReactiveSystem
 {
     private static EffectFn activeEffect;
@@ -94,79 +174,6 @@ public static class ReactiveSystem
         {
             effect();
         }
-    }
-}
-
-public class DeepReactive<T> : DispatchProxy where T : class
-{
-    private T _target;
-    private readonly Dictionary<string, PropertyInfo> _properties = new Dictionary<string, PropertyInfo>();
-
-    protected override object Invoke(MethodInfo targetMethod, object[] args)
-    {
-        var methodName = targetMethod.Name;
-
-        if (methodName.StartsWith("get_"))
-        {
-            var propertyName = methodName.Substring(4);
-            if (_properties.ContainsKey(propertyName))
-            {
-                return _properties[propertyName].GetValue(_target);
-            }
-        }
-        else if (methodName.StartsWith("set_"))
-        {
-            var propertyName = methodName.Substring(4);
-            if (_properties.ContainsKey(propertyName))
-            {
-                var oldValue = _properties[propertyName].GetValue(_target);
-                if (!Equals(oldValue, args[0]))
-                {
-                    _properties[propertyName].SetValue(_target, args[0]);
-                    OnPropertyChanged(propertyName);
-                }
-            }
-        }
-
-        return targetMethod.Invoke(_target, args);
-    }
-
-    public static T Create(T target)
-    {
-        object proxy = Create<T, DeepReactive<T>>();
-        ((DeepReactive<T>)proxy).SetParameters(target);
-        return (T)proxy;
-    }
-
-    private void SetParameters(T target)
-    {
-        _target = target;
-        var type = typeof(T);
-
-        foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-        {
-            if (prop.CanRead && prop.CanWrite)
-            {
-                _properties[prop.Name] = prop;
-            }
-        }
-    }
-
-    private event PropertyChangedEventHandler PropertyChanged;
-
-    protected void OnPropertyChanged(string propertyName)
-    {
-        PropertyChanged?.Invoke(_target, new PropertyChangedEventArgs(propertyName));
-    }
-
-    public void AddPropertyChangedHandler(PropertyChangedEventHandler handler)
-    {
-        PropertyChanged += handler;
-    }
-
-    public void RemovePropertyChangedHandler(PropertyChangedEventHandler handler)
-    {
-        PropertyChanged -= handler;
     }
 }
 
