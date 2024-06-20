@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reflection;
 
 public delegate void EffectFn();
 public delegate T Getter<T>();
@@ -93,6 +94,79 @@ public static class ReactiveSystem
         {
             effect();
         }
+    }
+}
+
+public class DeepReactive<T> : DispatchProxy where T : class
+{
+    private T _target;
+    private readonly Dictionary<string, PropertyInfo> _properties = new Dictionary<string, PropertyInfo>();
+
+    protected override object Invoke(MethodInfo targetMethod, object[] args)
+    {
+        var methodName = targetMethod.Name;
+
+        if (methodName.StartsWith("get_"))
+        {
+            var propertyName = methodName.Substring(4);
+            if (_properties.ContainsKey(propertyName))
+            {
+                return _properties[propertyName].GetValue(_target);
+            }
+        }
+        else if (methodName.StartsWith("set_"))
+        {
+            var propertyName = methodName.Substring(4);
+            if (_properties.ContainsKey(propertyName))
+            {
+                var oldValue = _properties[propertyName].GetValue(_target);
+                if (!Equals(oldValue, args[0]))
+                {
+                    _properties[propertyName].SetValue(_target, args[0]);
+                    OnPropertyChanged(propertyName);
+                }
+            }
+        }
+
+        return targetMethod.Invoke(_target, args);
+    }
+
+    public static T Create(T target)
+    {
+        object proxy = Create<T, DeepReactive<T>>();
+        ((DeepReactive<T>)proxy).SetParameters(target);
+        return (T)proxy;
+    }
+
+    private void SetParameters(T target)
+    {
+        _target = target;
+        var type = typeof(T);
+
+        foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (prop.CanRead && prop.CanWrite)
+            {
+                _properties[prop.Name] = prop;
+            }
+        }
+    }
+
+    private event PropertyChangedEventHandler PropertyChanged;
+
+    protected void OnPropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(_target, new PropertyChangedEventArgs(propertyName));
+    }
+
+    public void AddPropertyChangedHandler(PropertyChangedEventHandler handler)
+    {
+        PropertyChanged += handler;
+    }
+
+    public void RemovePropertyChangedHandler(PropertyChangedEventHandler handler)
+    {
+        PropertyChanged -= handler;
     }
 }
 
