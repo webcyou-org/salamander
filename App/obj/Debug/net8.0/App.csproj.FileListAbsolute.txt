@@ -1,0 +1,15 @@
+/Users/takayamadaisuke/development/private/salamander/App/bin/Debug/net8.0/App
+/Users/takayamadaisuke/development/private/salamander/App/bin/Debug/net8.0/App.deps.json
+/Users/takayamadaisuke/development/private/salamander/App/bin/Debug/net8.0/App.runtimeconfig.json
+/Users/takayamadaisuke/development/private/salamander/App/bin/Debug/net8.0/App.dll
+/Users/takayamadaisuke/development/private/salamander/App/bin/Debug/net8.0/App.pdb
+/Users/takayamadaisuke/development/private/salamander/App/obj/Debug/net8.0/App.GeneratedMSBuildEditorConfig.editorconfig
+/Users/takayamadaisuke/development/private/salamander/App/obj/Debug/net8.0/App.AssemblyInfoInputs.cache
+/Users/takayamadaisuke/development/private/salamander/App/obj/Debug/net8.0/App.AssemblyInfo.cs
+/Users/takayamadaisuke/development/private/salamander/App/obj/Debug/net8.0/App.csproj.CoreCompileInputs.cache
+/Users/takayamadaisuke/development/private/salamander/App/obj/Debug/net8.0/App.sourcelink.json
+/Users/takayamadaisuke/development/private/salamander/App/obj/Debug/net8.0/App.dll
+/Users/takayamadaisuke/development/private/salamander/App/obj/Debug/net8.0/refint/App.dll
+/Users/takayamadaisuke/development/private/salamander/App/obj/Debug/net8.0/App.pdb
+/Users/takayamadaisuke/development/private/salamander/App/obj/Debug/net8.0/App.genruntimeconfig.cache
+/Users/takayamadaisuke/development/private/salamander/App/obj/Debug/net8.0/ref/App.dll
